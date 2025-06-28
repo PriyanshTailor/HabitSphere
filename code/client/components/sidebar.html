@@ -1,0 +1,33 @@
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-ring"></div>
+    <span>HabitSphere</span>
+  </div>
+
+  <ul class="nav">
+    <li><a href="index.html">Dashboard</a></li>
+    <li><a href="create_habit.html">Create Habit</a></li>
+    <li><a href="habit_suggestion.html">Habit Suggestion</a></li>
+    <li><a href="insights.html">Insights</a></li>
+    <li><a href="scheduler.html">Scheduler</a></li>
+    <li><a href="profile.html">Profile</a></li>
+  </ul>
+
+  <div class="profile" id="user-profile">
+    <img id="sidebar-profile-pic" src="/images/defaultuser.jpg" alt="User" style="width:60px; height:60px; border-radius:50%; object-fit:cover;" />
+    <span id="sidebar-fullname">User</span>
+  </div>
+</div>
+
+<script>
+  fetch('/get_user_info')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('sidebar-fullname').textContent = data.fullname || 'User';
+      if (data.profile_pic_url) {
+        const updatedPicUrl = data.profile_pic_url + "?t=" + new Date().getTime();
+        document.getElementById('sidebar-profile-pic').src = updatedPicUrl;
+      }
+    })
+    .catch(error => console.error("Error loading user info:", error));
+</script>
