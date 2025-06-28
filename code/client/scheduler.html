@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scheduler - HabitSphere</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .modal h3 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .modal form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal form input {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .modal form button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--color-primary);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .modal form button:hover {
+      background: var(--color-accent);
+    }
+
+    .modal-close {
+      text-align: right;
+      margin-bottom: -1.5rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .modal-close:hover {
+      color: #000;
+    }
+
+    .schedule-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .schedule-buttons button {
+      background: var(--color-primary);
+      color: white;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .schedule-buttons .delete {
+      background: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div id="navbar-container"></div>
+
+    <div class="main">
+      <h2 class="page-title">Schedule Your Habits</h2>
+
+      <div class="scheduler-controls">
+        <label for="day-select">Select Day:</label>
+        <select id="day-select">
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+          <option>Saturday</option>
+          <option>Sunday</option>
+        </select>
+      </div>
+
+      <div class="schedule-grid">
+        <div class="schedule-card">
+          <h4>🧘‍♀️ Meditate</h4>
+          <p>Time: 7:00 AM</p>
+          <div class="schedule-buttons">
+            <button onclick="openModal()">Edit</button>
+            <button class="delete">Delete</button>
+          </div>
+        </div>
+        <div class="schedule-card">
+          <h4>🏃 Run</h4>
+          <p>Time: 6:30 PM</p>
+          <div class="schedule-buttons">
+            <button onclick="openModal()">Edit</button>
+            <button class="delete">Delete</button>
+          </div>
+        </div>
+        <div class="schedule-card">
+          <h4>📚 Read</h4>
+          <p>Time: 9:00 PM</p>
+          <div class="schedule-buttons">
+            <button onclick="openModal()">Edit</button>
+            <button class="delete">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+      <h3>Edit Habit</h3>
+      <form>
+        <input type="text" placeholder="Habit Name" value="Meditate" />
+        <input type="time" value="07:00" />
+        <input type="text" placeholder="Emoji (e.g., 🧘‍♀️)" value="🧘‍♀️" />
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/renderComponents.js"></script>
+  <script>
+    loadComponent("#sidebar-container", "components/sidebar.html");
+    loadComponent("#navbar-container", "components/navbar.html");
+
+    function openModal() {
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("editModal").style.display = "none";
+    }
+  </script>
+</body>
+</html>

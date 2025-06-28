@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Insights - HabitSphere</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="sidebar-container"></div>
+
+  <div class="page-content">
+    <div id="navbar-container"></div>
+
+    <div class="main">
+      <h2 class="page-title">Your Habit Insights</h2>
+
+      <div class="insights-summary">
+        <div class="insight-card">
+          <h3>🔥 Current Streak</h3>
+          <p>7 days in a row!</p>
+        </div>
+        <div class="insight-card">
+          <h3>✅ Most Completed</h3>
+          <p>Drink Water (92%)</p>
+        </div>
+        <div class="insight-card">
+          <h3>⚠ Missed Most</h3>
+          <p>Meditate (40% skip rate)</p>
+        </div>
+      </div>
+
+      <div class="insights-charts">
+        <div class="chart-block">
+          <h4>Weekly Overview</h4>
+          <div class="chart-placeholder">[Weekly Chart Here]</div>
+        </div>
+        <div class="chart-block">
+          <h4>Habit Completion</h4>
+          <div class="chart-placeholder">[Completion Donut Chart]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/renderComponents.js"></script>
+  <script>
+    loadComponent("#sidebar-container", "components/sidebar.html");
+    loadComponent("#navbar-container", "components/navbar.html");
+  </script>
+</body>
+</html>

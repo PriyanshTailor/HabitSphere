@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Habit Suggestion - HabitSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    .suggestion-section {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      margin: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+    .suggestion-section h2 {
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      background: #f9f9f9;
+    }
+    .result-box {
+      margin-top: 20px;
+      background: #e8f0fe;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+    .add-btn {
+      margin-top: 15px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .add-btn:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar and Navbar -->
+  <div id="sidebar-container"></div>
+  <div class="page-content">
+    <div id="navbar-container"></div>
+
+    <div class="main">
+      <div class="suggestion-section">
+        <h2>Get a Smart Habit Suggestion</h2>
+        <form id="habitForm">
+          <!-- Fields -->
+          <div class="input-group">
+            <label for="age_group">Age Group</label>
+            <select id="age_group" required>
+              <option value="">Select</option>
+              <option value="Teen">Teen</option>
+              <option value="Adult">Adult</option>
+              <option value="Senior">Senior</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="gender">Gender</label>
+            <select id="gender" required>
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="personality_type">Personality Type</label>
+            <select id="personality_type" required>
+              <option value="">Select</option>
+              <option value="Introvert">Introvert</option>
+              <option value="Extrovert">Extrovert</option>
+              <option value="Ambivert">Ambivert</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="mood">Mood</label>
+            <select id="mood" required>
+              <option value="">Select</option>
+              <option value="Happy">Happy</option>
+              <option value="Calm">Calm</option>
+              <option value="Stressed">Stressed</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="goal">Goal</label>
+            <select id="goal" required>
+              <option value="">Select</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Mental Health">Mental Health</option>
+              <option value="Creativity">Creativity</option>
+              <option value="Productivity">Productivity</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="time_of_day">Preferred Time of Day</label>
+            <select id="time_of_day" required>
+              <option value="">Select</option>
+              <option value="Morning">Morning</option>
+              <option value="Afternoon">Afternoon</option>
+              <option value="Night">Night</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="habit_type">Habit Type</label>
+            <select id="habit_type" required>
+              <option value="">Select</option>
+              <option value="Physical">Physical</option>
+              <option value="Spiritual">Spiritual</option>
+              <option value="Recreational">Recreational</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty" required>
+              <option value="">Select</option>
+              <option value="Easy">Easy</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="habit_category">Habit Category</label>
+            <select id="habit_category" required>
+              <option value="">Select</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Mindfulness">Mindfulness</option>
+              <option value="Creative Writing">Creative Writing</option>
+              <option value="Mental Exercise">Mental Exercise</option>
+            </select>
+          </div>
+
+          <button type="submit">Suggest Habit</button>
+        </form>
+
+        <div class="result-box" id="resultBox">
+          <p id="suggestedHabit">⏳</p>
+          <form method="POST" action="/add_habit">
+            <input type="hidden" name="habit" id="habitInput">
+            <input type="hidden" name="habit_time" value="Anytime">
+            <button type="submit" class="add-btn">➕ Add Habit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/renderComponents.js"></script>
+  <script>
+    loadComponent("#sidebar-container", "components/sidebar.html");
+    loadComponent("#navbar-container", "components/navbar.html");
+
+    document.getElementById('habitForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        age_group: document.getElementById('age_group').value,
+        gender: document.getElementById('gender').value,
+        personality_type: document.getElementById('personality_type').value,
+        mood: document.getElementById('mood').value,
+        goal: document.getElementById('goal').value,
+        time_of_day: document.getElementById('time_of_day').value,
+        habit_type: document.getElementById('habit_type').value,
+        difficulty: document.getElementById('difficulty').value,
+        habit_category: document.getElementById('habit_category').value
+      };
+
+      // Show result box and loading message
+      document.getElementById('resultBox').style.display = 'block';
+      document.getElementById('suggestedHabit').innerText = '⏳ Predicting...';
+
+      fetch('/suggest_habit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('suggestedHabit').innerText = '✅ Suggested Habit: ' + data.habit;
+        document.getElementById('habitInput').value = data.habit;
+      })
+      .catch(() => {
+        document.getElementById('suggestedHabit').innerText = '❌ Could not generate habit.';
+      });
+    });
+  </script>
+</body>
+</html>

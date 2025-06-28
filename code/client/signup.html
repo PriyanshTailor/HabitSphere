@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign Up - HabitSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-left">
+      <div class="auth-logo">HabitSphere</div>
+      <div class="auth-tabs">
+        <button onclick="window.location.href='login.html'">Login</button>
+        <button class="active">Register</button>
+      </div>
+      <form method="POST" action="/signup">
+        <div class="input-group"><input type="text" name="fullname" placeholder="Full Name" required></div>
+        <div class="input-group"><input type="email" name="email" placeholder="Email Address" required></div>
+        <div class="input-group"><input type="password" name="password" placeholder="Password" required></div>
+        <div class="input-group"><input type="password" name="confirm_password" placeholder="Confirm Password" required></div>
+        <button class="signup-btn" type="submit">Sign Up</button>
+      </form>
+    </div>
+    <div class="auth-right">
+      <img src="images/signup-image.png" alt="Signup Illustration" />
+    </div>
+  </div>
+  <script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const msg = urlParams.get('msg');
+  if (msg) {
+    alert(msg.replace(/\+/g, ' ')); // show alert and decode '+'
+    window.history.replaceState(null, null, window.location.pathname); // remove msg from URL
+  }
+</script>
+</body>
+</html>
