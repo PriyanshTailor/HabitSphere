@@ -6,6 +6,7 @@ import joblib
 import os
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -238,7 +239,7 @@ def get_user_habits():
 
     user_id = session['user_id']
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id, habit, icon, preferred_time, scheduled_day, status FROM user_habits WHERE user_id = %s", (user_id,))
+    cur.execute("SELECT id, habit, icon, preferred_time, scheduled_day, status FROM user_habits WHERE user_id = %s AND status = 'Pending'", (user_id,))
     habits = cur.fetchall()
     cur.close()
 
@@ -265,8 +266,12 @@ def update_habit_status():
 
     cur = mysql.connection.cursor()
     try:
-        cur.execute("UPDATE user_habits SET status = %s WHERE id = %s AND user_id = %s",
-                    (status, habit_id, session['user_id']))
+        if status == "Done":
+            cur.execute("UPDATE user_habits SET status = %s, done_at = NOW() WHERE id = %s AND user_id = %s",
+                        (status, habit_id, session['user_id']))
+        else:
+            cur.execute("UPDATE user_habits SET status = %s WHERE id = %s AND user_id = %s",
+                        (status, habit_id, session['user_id']))
         mysql.connection.commit()
         return jsonify({'message': 'Status updated'})
     except Exception as e:
@@ -275,13 +280,161 @@ def update_habit_status():
         return jsonify({'error': 'Failed to update status'}), 500
     finally:
         cur.close()
-        
+
+@app.route('/get_dashboard_stats')
+def get_dashboard_stats():
+    if 'user_id' not in session:
+        return jsonify({'streak': 0, 'success_ratio': 0})
+
+    cur = mysql.connection.cursor()
+    user_id = session['user_id']
+
+    cur.execute("""
+        SELECT COUNT(*) FROM user_habits 
+        WHERE user_id = %s AND status = 'Done'
+    """, (user_id,))
+    done_count = cur.fetchone()[0]
+
+    cur.execute("""
+        SELECT COUNT(*) FROM user_habits 
+        WHERE user_id = %s AND status = 'Skipped'
+    """, (user_id,))
+    skipped_count = cur.fetchone()[0]
+
+    total = done_count + skipped_count
+    success_ratio = round((done_count / total) * 100) if total > 0 else 0
+
+    cur.execute("""
+        SELECT DISTINCT DATE(done_at) FROM user_habits
+        WHERE user_id = %s AND status = 'Done'
+        ORDER BY DATE(done_at) DESC
+    """, (user_id,))
+    rows = cur.fetchall()
+
+    streak = 0
+    today = datetime.today().date()
+    for row in rows:
+        day = row[0]
+        if day == today or day == today - timedelta(days=streak):
+            streak += 1
+        else:
+            break
+
+    cur.close()
+    return jsonify({'streak': streak, 'success_ratio': success_ratio})
+
 @app.before_request
 def before_request():
     if mysql.connection:
         cursor = mysql.connection.cursor()
         cursor.execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;")
         cursor.close()
+        
+@app.route('/get_insights')
+def get_insights():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+
+    # 1) Streak: get max consecutive days with habits done
+    cur.execute("""
+        SELECT DATE(done_at) as day
+        FROM user_habits
+        WHERE user_id = %s AND status = 'Done'
+        GROUP BY day
+        ORDER BY day DESC
+    """, (user_id,))
+    days = [row[0] for row in cur.fetchall()]
+    streak = 0
+    if days:
+        streak = 1
+        prev = days[0]
+        for day in days[1:]:
+            if (prev - day).days == 1:
+                streak += 1
+                prev = day
+            else:
+                break
+
+    # 2) Most completed habit
+    cur.execute("""
+        SELECT habit, 
+               COUNT(*) AS total,
+               SUM(status = 'Done') AS done_count
+        FROM user_habits
+        WHERE user_id = %s
+        GROUP BY habit
+        ORDER BY done_count DESC
+        LIMIT 1
+    """, (user_id,))
+    most_completed = cur.fetchone()
+    if most_completed and most_completed[1] > 0:
+        most_completed_name = most_completed[0]
+        percent_done = int(most_completed[2] / most_completed[1] * 100)
+    else:
+        most_completed_name = "-"
+        percent_done = 0
+
+    # 3) Most missed habit
+    cur.execute("""
+        SELECT habit, 
+               COUNT(*) AS total,
+               SUM(status = 'Skipped') AS skipped_count
+        FROM user_habits
+        WHERE user_id = %s
+        GROUP BY habit
+        ORDER BY skipped_count DESC
+        LIMIT 1
+    """, (user_id,))
+    most_missed = cur.fetchone()
+    if most_missed and most_missed[1] > 0:
+        most_missed_name = most_missed[0]
+        percent_skipped = int(most_missed[2] / most_missed[1] * 100)
+    else:
+        most_missed_name = "-"
+        percent_skipped = 0
+
+    # 4) Weekly done count
+    cur.execute("""
+        SELECT DATE(done_at) as day, COUNT(*) 
+        FROM user_habits
+        WHERE user_id = %s AND status = 'Done'
+          AND done_at >= CURDATE() - INTERVAL 6 DAY
+        GROUP BY day
+        ORDER BY day
+    """, (user_id,))
+    weekly = cur.fetchall()
+    weekly_data = []
+    for i in range(7):
+        day = (pd.Timestamp.now() - pd.Timedelta(days=6-i)).date()
+        count = next((c for d, c in weekly if d == day), 0)
+        weekly_data.append({'date': str(day), 'count': count})
+
+    # 5) Success vs Skipped ratio
+    cur.execute("""
+        SELECT 
+          SUM(status = 'Done') as done_count,
+          SUM(status = 'Skipped') as skipped_count
+        FROM user_habits
+        WHERE user_id = %s
+    """, (user_id,))
+    done_count, skipped_count = cur.fetchone()
+    done_count = done_count or 0
+    skipped_count = skipped_count or 0
+    total = done_count + skipped_count
+    success_percent = int(done_count / total * 100) if total > 0 else 0
+
+    cur.close()
+
+    return jsonify({
+        'streak': streak,
+        'most_completed': {'habit': most_completed_name, 'percent': percent_done},
+        'most_missed': {'habit': most_missed_name, 'percent': percent_skipped},
+        'weekly': weekly_data,
+        'success_percent': success_percent
+    })
 
 @app.route('/schedule_habit', methods=['POST'])
 def schedule_habit():
