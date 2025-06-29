@@ -161,6 +161,7 @@
           <p id="suggestedHabit">⏳</p>
           <form method="POST" action="/add_habit">
             <input type="hidden" name="habit" id="habitInput">
+            <input type="hidden" name="habit_icon" id="habitIconInput">
             <input type="hidden" name="habit_time" value="Anytime">
             <button type="submit" class="add-btn">➕ Add Habit</button>
           </form>
@@ -189,7 +190,6 @@
         habit_category: document.getElementById('habit_category').value
       };
 
-      // Show result box and loading message
       document.getElementById('resultBox').style.display = 'block';
       document.getElementById('suggestedHabit').innerText = '⏳ Predicting...';
 
@@ -200,8 +200,9 @@
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById('suggestedHabit').innerText = '✅ Suggested Habit: ' + data.habit;
+        document.getElementById('suggestedHabit').innerText = `✅ Suggested Habit: ${data.symbol} ${data.habit}`;
         document.getElementById('habitInput').value = data.habit;
+        document.getElementById('habitIconInput').value = data.symbol;
       })
       .catch(() => {
         document.getElementById('suggestedHabit').innerText = '❌ Could not generate habit.';
