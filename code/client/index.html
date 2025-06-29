@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>HabitSphere</title>
+  <title>HabitSphere Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
@@ -19,7 +19,7 @@
     <div class="main">
       <!-- Welcome -->
       <div class="welcome-user" style="margin-bottom: 20px; font-size: 20px; font-weight: 600;">
-        Hey, <span id="username">User</span> 👋
+        Hey <span id="username">User</span>, let’s crush it today 💪
       </div>
 
       <!-- AI Suggestion Box -->
@@ -35,29 +35,27 @@
       <div class="section habits">
         <h2>Today’s Habits</h2>
         <div id="habitContainer" class="habit-cards">
-          <!-- Habit cards will be dynamically injected -->
+          <!-- Habit cards injected here -->
         </div>
       </div>
 
-      <!-- Analytics Section (Optional dynamic) -->
+      <!-- Analytics -->
       <div class="section analytics">
         <div class="stat-card half-width">
           <div class="flame">🔥</div>
           <div class="text">
             <p>Streak</p>
-            <h3 id="streak-count">7 days</h3>
+            <h3 id="streak-count">0 days</h3>
           </div>
         </div>
 
         <div class="stat-card half-width">
           <div class="donut">
             <svg viewBox="0 0 36 36" class="circular-chart">
-              <path class="circle-bg"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path class="circle"
-                stroke-dasharray="82, 100"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <text x="18" y="20.35" class="percentage">82%</text>
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="circle" id="circle-path" stroke-dasharray="0, 100"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <text x="18" y="20.35" class="percentage" id="success-percentage">0%</text>
             </svg>
             <p class="chart-label">Success vs Fail</p>
           </div>
@@ -69,80 +67,101 @@
   <!-- Scripts -->
   <script src="js/renderComponents.js"></script>
   <script>
-    // Load reusable components
+    // Load reusable sidebar and navbar
     loadComponent("#sidebar-container", "components/sidebar.html");
     loadComponent("#navbar-container", "components/navbar.html");
 
-    // Fetch user info
+    // Set username
     fetch('/get_user_info')
       .then(res => res.json())
       .then(data => {
         if (data.fullname) {
-          document.getElementById('username').textContent = data.fullname;
+          document.getElementById('username').textContent = data.fullname.toUpperCase();
         }
       });
 
-    // Fetch and render user habits
-    fetch('/get_user_habits')
+    // Render dashboard stats
+    function updateStats(streak, success) {
+      document.getElementById("streak-count").textContent = `${streak} day${streak !== 1 ? 's' : ''}`;
+      document.getElementById("success-percentage").textContent = `${success}%`;
+      const path = document.getElementById("circle-path");
+      path.setAttribute("stroke-dasharray", `${success}, 100`);
+    }
+
+    fetch('/get_dashboard_stats')
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById('habitContainer');
-        container.innerHTML = "";
-
-        if (data && data.length > 0) {
-          data.forEach(habit => {
-            const card = document.createElement("div");
-            card.className = "habit-card";
-            card.innerHTML = `
-              <div class="card-body">
-                <div class="icon">${habit.icon || '💡'}</div>
-                <div class="info">
-                  <strong>${habit.habit}</strong>
-                  <span>${habit.time || 'Anytime'}</span>
-                </div>
-              </div>
-              <div class="actions">
-                <button class="done">✔ Done</button>
-                <button class="skip">Skip</button>
-              </div>
-            `;
-
-            // Button logic
-            card.querySelector(".done").addEventListener("click", () => {
-              updateHabitStatus(habit.habit, "Done");
-              card.style.opacity = 0.5;
-            });
-
-            card.querySelector(".skip").addEventListener("click", () => {
-              updateHabitStatus(habit.habit, "Skipped");
-              card.style.opacity = 0.5;
-            });
-
-            container.appendChild(card);
-          });
-        } else {
-          container.innerHTML = `<p style="text-align:center; color:#888;">No habits yet. Add some from "Create Habit".</p>`;
-        }
+        updateStats(data.streak, data.success_ratio);
       })
-      .catch(err => {
-        console.error('Error fetching user habits:', err);
-      });
+      .catch(err => console.error("Stats error:", err));
 
-    // Update status
-    function updateHabitStatus(habitName, status) {
+    // Render user habits
+    function loadHabits() {
+      fetch('/get_user_habits')
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('habitContainer');
+          container.innerHTML = "";
+
+          if (data && data.length > 0) {
+            data.forEach(habit => {
+              const card = document.createElement("div");
+              card.className = "habit-card";
+              card.innerHTML = `
+                <div class="card-body">
+                  <div class="icon">${habit.icon || '💡'}</div>
+                  <div class="info">
+                    <strong>${habit.habit}</strong>
+                    <span>${habit.time || 'Anytime'}</span>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="done">✔ Done</button>
+                  <button class="skip">Skip</button>
+                </div>
+              `;
+
+              card.querySelector(".done").addEventListener("click", () => {
+                updateHabitStatus(habit.id, "Done", card);
+              });
+
+              card.querySelector(".skip").addEventListener("click", () => {
+                updateHabitStatus(habit.id, "Skipped", card);
+              });
+
+              container.appendChild(card);
+            });
+          } else {
+            container.innerHTML = `<p style="text-align:center; color:#888;">No habits yet. Add some from "Create Habit".</p>`;
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching habits:", err);
+        });
+    }
+
+    function updateHabitStatus(habitId, status, card) {
       fetch('/update_habit_status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ habit: habitName, status: status })
+        body: JSON.stringify({ id: habitId, status: status })
       })
       .then(res => res.json())
       .then(data => {
         console.log("Status updated:", data);
+        card.remove();
+        loadHabits(); // Reload habits
+        fetch('/get_dashboard_stats')
+          .then(res => res.json())
+          .then(data => {
+            updateStats(data.streak, data.success_ratio);
+          });
       })
-      .catch(err => {
-        console.error("Status update error:", err);
-      });
+      .catch(err => console.error("Status update error:", err));
     }
+
+    // Initial load
+    loadHabits();
   </script>
 </body>
 </html>
